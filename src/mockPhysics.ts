@@ -41,23 +41,33 @@ export function createTable(ballCount: number): Table {
     return table;
 }
 
-export function updateTable(table: Table): Table {
+export function updateTable(table: Table, readsOnly: boolean): Table {
     for (const ball of table.balls) {
-        ball.position.x += ball.velocity.x;
-        ball.position.y += ball.velocity.y;
-        ball.velocity.x *= 0.999;
-        ball.velocity.x *= 0.999;
+        if (readsOnly) {
+            const result1 = ball.velocity.x + ball.velocity.y;
+            const result2 = ball.position.x + ball.position.y;
+        } else {
+            ball.position.x += ball.velocity.x;
+            ball.position.y += ball.velocity.y;
+            ball.velocity.x *= 0.999;
+            ball.velocity.x *= 0.999;
+        }
     }
 
     for (const ballA of table.balls) {
         for (const ballB of table.balls) {
             if (ballA !== ballB) {
-                // perform some collision or other
-                const dx = ballB.position.x - ballA.position.y;
-                const dy = ballB.position.y - ballA.position.y;
-                const len = Math.sqrt((dx*dx) + (dy*dy));
-                if (len < ballB.radius + ballA.radius) {
-                    // collision!
+                if (readsOnly) {
+                    const result1 = ballA.velocity.x + ballB.velocity.y;
+                    const result2 = ballA.position.x + ballB.position.y;
+                } else {
+                    // perform some collision or other
+                    const dx = ballB.position.x - ballA.position.y;
+                    const dy = ballB.position.y - ballA.position.y;
+                    const len = Math.sqrt((dx*dx) + (dy*dy));
+                    if (len < ballB.radius + ballA.radius) {
+                        // collision!
+                    }
                 }
             }
         }
