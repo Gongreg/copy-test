@@ -30,11 +30,11 @@ function createBall(): Ball {
     }
 }
 
-export function createTable(): Table {
+export function createTable(ballCount: number): Table {
     const table: Table = {
         balls: []
     };
-    for (let i=0;i<30;i++) {
+    for (let i=0;i<ballCount;i++) {
         table.balls.push(createBall());
     }
 
