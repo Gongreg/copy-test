@@ -1,4 +1,5 @@
 import { create } from 'mutative';
+import { produce } from 'immer';
 import { createTable, updateTable } from './mockPhysics';
 
 const iterations = 5000;
@@ -30,4 +31,15 @@ for (let i=0;i<iterations;i++) {
 }
 after = Date.now();
 console.log("MUTATIVE: " + iterations+" iterations @"+(after-before)+"ms  ("+((after-before) / iterations)+" per loop)");
+
+
+let immerTable = createTable(ballCount);
+before = Date.now();
+for (let i=0;i<iterations;i++) {
+    immerTable = produce(immerTable, (draft) => {
+        updateTable(draft);
+    });
+}
+after = Date.now();
+console.log("IMMER   : " + iterations+" iterations @"+(after-before)+"ms  ("+((after-before) / iterations)+" per loop)");
 

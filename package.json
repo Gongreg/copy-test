@@ -13,6 +13,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "immer": "^10.0.4",
     "mutative": "^1.0.3"
   }
 }
