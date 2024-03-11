@@ -15,7 +15,7 @@ console.log("RAW     : " + iterations+" iterations @"+(after-before)+"ms  ("+((a
 let rawCopyTable = createTable(ballCount);
 before = Date.now();
 for (let i=0;i<iterations;i++) {
-    rawTable = JSON.parse(JSON.stringify(updateTable(rawTable)));
+    rawCopyTable = JSON.parse(JSON.stringify(updateTable(rawCopyTable)));
 }
 after = Date.now();
 console.log("RAW+COPY: " + iterations+" iterations @"+(after-before)+"ms  ("+((after-before) / iterations)+" per loop)");
