@@ -9,7 +9,6 @@ const readOnly = true;
 console.log(new Date());
 console.log("Iterations="+iterations+" Balls="+ballCount+" ReadOnly="+readOnly);
 console.log();
-
 let rawTable = createTable(ballCount);
 let before = Date.now();
 for (let i=0;i<iterations;i++) {
@@ -30,9 +29,14 @@ console.log("RAW+COPY: " + iterations+" iterations @"+(after-before)+"ms  ("+((a
 let mutativeTable = createTable(ballCount);
 before = Date.now();
 for (let i=0;i<iterations;i++) {
+    const beforeTable = mutativeTable;
     mutativeTable = create(mutativeTable, (draft) => {
         updateTable(draft, readOnly);
     });
+    if (beforeTable !== mutativeTable && readOnly) {
+        console.log("ERROR - change detected");
+        process.exit(0);
+    }
 }
 after = Date.now();
 console.log("MUTATIVE: " + iterations+" iterations @"+(after-before)+"ms  ("+((after-before) / iterations)+" per loop)");
@@ -41,9 +45,14 @@ console.log("MUTATIVE: " + iterations+" iterations @"+(after-before)+"ms  ("+((a
 let immerTable = createTable(ballCount);
 before = Date.now();
 for (let i=0;i<iterations;i++) {
+    const beforeTable = immerTable;
     immerTable = produce(immerTable, (draft) => {
         updateTable(draft, readOnly);
     });
+    if (beforeTable !== immerTable && readOnly) {
+        console.log("ERROR - change detected");
+        process.exit(0);
+    }
 }
 after = Date.now();
 console.log("IMMER   : " + iterations+" iterations @"+(after-before)+"ms  ("+((after-before) / iterations)+" per loop)");
