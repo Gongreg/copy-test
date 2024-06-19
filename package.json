@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.14.5",
+    "prettier": "^3.3.2",
     "typescript": "^5.4.2"
   },
   "dependencies": {
