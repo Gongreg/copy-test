@@ -15,7 +15,10 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "fast-copy": "^3.0.2",
+    "fastest-json-copy": "^1.0.1",
     "immer": "^10.0.4",
+    "lodash.clonedeep": "^4.5.0",
     "mutative": "^1.0.3"
   }
 }

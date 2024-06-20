@@ -1,149 +1,107 @@
-import { create } from "mutative";
-import { createTable, updateTable } from "./mockPhysics";
+import { copy } from "fastest-json-copy";
+import fastCopy from "fast-copy";
 
+import { createData } from "./data";
+var cloneDeep = require("lodash.clonedeep");
 const formatMemoryUsage = (data: number) =>
   `${Math.round((data / 1024 / 1024) * 100) / 100} MB`;
 
 const test = parseInt(process.argv[2], 10);
 
 const iterations = 100;
-const ballCount = 500;
+const ballCount = 20;
 
-const data = createTable(ballCount);
+const data = createData(ballCount);
 
-console.log("DATA size in kb", JSON.stringify(data).length / 1024);
+const size = JSON.stringify(data).length / 1024;
 
-let prev = data;
+let min = Infinity;
+let max = -Infinity;
 
-let last3Copies: any[] = [];
-
-let trackChanges = false;
+let entries: number[] = [];
 
 function runTests(name: string, testFn: () => void) {
-  prev = data;
-
-  let before = performance.now();
   for (let i = 0; i < iterations; i++) {
+    let before = performance.now();
     testFn();
+    let after = performance.now();
+
+    const diff = after - before;
+
+    if (diff > max) {
+      max = diff;
+    }
+
+    if (diff < min) {
+      min = diff;
+    }
+
+    entries.push(after - before);
   }
 
-  let after = performance.now();
-  console.log(
-    `${name}: ` +
-      iterations +
-      " iterations @" +
-      (after - before) +
-      "ms  (" +
-      (after - before) / iterations +
-      " per loop)",
+  const avg = entries.reduce((a, b) => a + b, 0) / entries.length;
+  const median = entries.sort((a, b) => a - b)[Math.floor(entries.length / 2)];
+
+  const stddev = Math.sqrt(
+    entries.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / entries.length,
+  );
+
+  require("fs").appendFileSync(
+    "./results.csv",
+    `${name},${size},${avg},${median},${min},${max}\n`,
   );
 }
 
-console.log(new Date());
-console.log("Iterations=" + iterations + " Balls=" + ballCount);
-
 if (test === 1) {
-  runTests("RAW", () => {
-    let first = updateTable(prev);
-    let second = updateTable(first);
-    let third = updateTable(second);
-    prev = first;
-    last3Copies = [prev, last3Copies[0], last3Copies[1]];
+  const x = JSON.stringify(data);
+  runTests("json parse", () => {
+    JSON.parse(x);
   });
 }
 
 if (test === 2) {
-  runTests("RAW+COPY", () => {
-    let first = JSON.parse(JSON.stringify(updateTable(prev)));
-    let second = JSON.parse(JSON.stringify(updateTable(first)));
-    let third = JSON.parse(JSON.stringify(updateTable(second)));
-
-    prev = first;
-    last3Copies = [prev, last3Copies[0], last3Copies[1]];
+  runTests("json stringify", () => {
+    JSON.stringify(data);
   });
 }
 
 if (test === 3) {
-  runTests("MUTATIVE", () => {
-    let first = create(prev, (draft) => {
-      updateTable(draft);
-    });
-    let second = create(first, (draft) => {
-      updateTable(draft);
-    });
-    let third = create(second, (draft) => {
-      updateTable(draft);
-    });
-
-    prev = first;
-    last3Copies = [prev, last3Copies[0], last3Copies[1]];
+  runTests("json parse + stringify", () => {
+    JSON.parse(JSON.stringify(data));
   });
-}
-
-let changes: [any, string, any][] = [];
-// This function handles arrays and objects
-function eachRecursive(obj: any) {
-  for (var k in obj) {
-    if (k.startsWith("_")) {
-      continue;
-    }
-    if (typeof obj[k] == "object" && obj[k] !== null) eachRecursive(obj[k]);
-    else {
-      obj[`_${k}`] = obj[k];
-      Object.defineProperty(obj, k, {
-        get: function () {
-          return obj[`_${k}`];
-        },
-        set: function (value: any) {
-          if (trackChanges) {
-            changes.push([obj, k, obj[`_${k}`]]);
-          }
-          obj[`_${k}`] = value;
-        },
-      });
-    }
-    // do something...
-  }
-
-  return obj;
-}
-
-const newData = eachRecursive(data);
-
-function undoChanges() {
-  trackChanges = false;
-  for (let i = changes.length - 1; i >= 0; i--) {
-    const [obj, key, value] = changes[i];
-    obj[key] = value;
-  }
-
-  trackChanges = true;
-
-  changes = [];
-
-  return;
 }
 
 if (test === 4) {
-  runTests("GETTER/SETTER", () => {
-    const first = updateTable(newData);
-    const second = updateTable(first);
-    const third = updateTable(second);
-
-    undoChanges();
-
-    prev = third;
-    last3Copies = [prev, last3Copies[0], last3Copies[1]];
+  runTests("structuredClone", () => {
+    structuredClone(data);
   });
 }
 
-const memoryData = process.memoryUsage();
+if (test === 5) {
+  runTests("fastest-json-copy", () => {
+    copy(data);
+  });
+}
 
-const memoryUsage = {
-  rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
-  heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
-  heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
-  external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
-};
+if (test === 6) {
+  runTests("fast-json-copy", () => {
+    fastCopy(data);
+  });
+}
 
-console.log(memoryUsage);
+if (test === 7) {
+  runTests("lodash clone deep", () => {
+    cloneDeep(data);
+  });
+}
+
+// const memoryData = process.memoryUsage();
+//
+// const memoryUsage = {
+//   rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+//   heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+//   heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+//   external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+// };
+
+// console.log(memoryUsage);

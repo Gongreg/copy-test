@@ -1,6 +1,6 @@
 // our pretend physics engine
 
-const fakeJSON = {
+const fakeJSON = JSON.stringify({
   x: [
     {
       _id: "6672fc0919d9208a23c9944b",
@@ -1564,7 +1564,7 @@ const fakeJSON = {
       favoriteFruit: "strawberry",
     },
   ],
-};
+});
 
 interface Vec2 {
   x: number;
@@ -1576,11 +1576,6 @@ interface Ball {
   radius: number;
   mass: number;
   data?: any;
-}
-
-interface Table {
-  balls: Ball[];
-  ballsObject: { [key: string]: Ball };
 }
 
 function createVector(x: number, y: number): Vec2 {
@@ -1596,85 +1591,16 @@ function createBall(i: number): Ball {
   };
 }
 
-export function createTable(ballCount: number): Table {
-  const table: Table = {
-    a: {
-      x: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-      y: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-      r: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-    },
-    b: {
-      x: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-      y: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-      r: {
-        a: { ...fakeJSON },
-        b: { ...fakeJSON },
-        c: { ...fakeJSON },
-        d: { ...fakeJSON },
-        e: { ...fakeJSON },
-        f: { ...fakeJSON },
-      },
-    },
+export function createData(ballCount: number) {
+  const table = {
+    a: {},
     balls: [],
     ballsObject: {},
   };
   for (let i = 0; i < ballCount; i++) {
-    table.balls.push(createBall(i + 1));
-    table.ballsObject[i + 1] = createBall(i + 1);
+    (table.balls as any).push(createBall(i + 1));
+    (table.ballsObject as any)[i + 1] = createBall(i + 1);
   }
-
-  return table;
-}
-
-export function updateTable(table: Table): Table {
-  for (const ball of table.balls) {
-    let count = 0;
-    for (const innerBall of table.balls) {
-      count += innerBall.position.x;
-    }
-
-    ball.position.x += count;
-  }
-
-  Object.keys(table.ballsObject).forEach((key) => {
-    const ball = table.ballsObject[key];
-    ball.position.y += ball.position.y;
-  });
 
   return table;
 }
